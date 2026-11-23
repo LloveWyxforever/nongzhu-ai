@@ -1,0 +1,31 @@
+# ---- 构建上下文最小化：只保留前端源码、后端源码、deploy/nginx ----
+# 仓库/依赖/缓存（镜像内会重新安装）
+.git
+.gitignore
+**/node_modules
+frontend/dist
+frontend/tsconfig.tsbuildinfo
+backend/.venv
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+.pytest_cache
+
+# 运行时数据与日志：由持久卷在容器内生成，绝不打包进镜像
+data
+knowledge
+logs
+exports
+demo_video
+
+# 文档与本机脚本
+docs
+scripts
+README.md
+*.bat
+
+# 机密：.env 一律不进镜像，运行时通过 compose env_file 注入
+.env
+.env.*
+*.key
+*.pem

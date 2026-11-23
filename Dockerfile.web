@@ -1,0 +1,32 @@
+# 农助 AI —— 前端 (React 19 + Vite 7 构建 → Nginx 静态服务 + /api 反向代理)
+# 前端全部使用相对路径 /api（见 src/api.ts、Chat.tsx），故采用同源反代，无需任何基址/base 改写。
+# 修正上一版镜像失败点：补齐 COPY 源码 + package-lock，并用 npm ci 做可复现安装。
+
+# ---------- 构建阶段 ----------
+FROM node:22-alpine AS build
+WORKDIR /app/frontend
+
+# 先装依赖（锁定 package-lock.json，.dockerignore 已排除本机 node_modules/dist）
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+
+# 拷贝前端源码后构建（tsc -b && vite build → dist/）
+COPY frontend/ ./
+RUN npm run build
+
+# ---------- 运行阶段 ----------
+FROM nginx:1.27-alpine
+
+# 反代配置（含 TLS、SSE 关缓冲、client_max_body_size、/api 代理），覆盖镜像内置默认站点
+COPY deploy/nginx/nongzhu.conf /etc/nginx/conf.d/default.conf
+
+# 前端构建产物
+COPY --from=build /app/frontend/dist /usr/share/nginx/html
+
+# TLS 证书与 ACME 续期目录由 docker-compose 以卷挂载注入：
+#   /etc/nginx/certs   -> fullchain.pem / privkey.pem
+#   /var/www/certbot   -> Let's Encrypt http-01 挑战
+EXPOSE 80 443
+
+# 启动前校验配置，失败即让容器报错退出（便于排查证书/语法问题）
+CMD ["sh", "-c", "nginx -t && nginx -g 'daemon off;'"]

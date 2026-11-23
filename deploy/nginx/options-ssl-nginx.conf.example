@@ -1,0 +1,9 @@
+# 备用 TLS 选项：当你的镜像/主机没有 /etc/letsencrypt/options-ssl-nginx.conf 时使用。
+# 做法：把本文件放到主机上并在 nongzhu.conf 里把 include 路径改为该文件，或
+#       在证书引导阶段将其复制到 /etc/letsencrypt/options-ssl-nginx.conf。
+ssl_protocols TLSv1.2 TLSv1.3;
+ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;
+ssl_prefer_server_ciphers off;
+ssl_session_timeout 1d;
+ssl_session_cache shared:SSL:50m;
+ssl_session_tickets off;
